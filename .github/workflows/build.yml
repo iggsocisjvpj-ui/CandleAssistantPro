@@ -18,12 +18,12 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build APK and Force Print Errors
+    - name: Build and Capture Logs
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
       run: |
         PROJECT_DIR=$(find . -name "build.gradle" -not -path "*/.*" -exec dirname {} \; | head -n 1)
-        echo "Project at: $PROJECT_DIR"
+        echo "Project directory: $PROJECT_DIR"
         cd "$PROJECT_DIR"
         
         if [ ! -f "gradlew" ]; then
@@ -32,16 +32,22 @@ jobs:
         
         chmod +x gradlew
         
-        # تنفيذ البناء وتخزين المخرجات في ملف لمعرفة سبب الفشل بالتحديد
-        ./gradlew assembleDebug --no-daemon > build_output.log 2>&1 || {
-          echo "=== BUILD FAILED. PRINTING LAST 50 LINES OF LOGS ==="
-          tail -n 50 build_output.log
+        # تشغيل البناء وحفظ المخرجات في ملف نصي
+        ./gradlew assembleDebug --no-daemon > ../build_logs.txt 2>&1 || {
+          echo "Build failed. Uploading logs..."
           exit 1
         }
 
-    - name: Upload APK
+    - name: Upload Build Logs on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: build_logs.txt
+
+    - name: Upload APK on Success
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
         path: '**/build/outputs/apk/debug/app-debug.apk'
-        if-no-files-found: error
+        if-no-files-found: ignore
