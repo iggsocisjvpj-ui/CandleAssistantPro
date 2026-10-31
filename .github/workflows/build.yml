@@ -18,36 +18,24 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build APK with Error Capture
+    - name: Build APK and Force Print Errors
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
       run: |
-        # طباعة مسارات المستودع للتأكد من مكان وجود المشروع
-        pwd
-        ls -la
-        
-        # البحث عن ملف build.gradle والدخول إلى مجلده
         PROJECT_DIR=$(find . -name "build.gradle" -not -path "*/.*" -exec dirname {} \; | head -n 1)
-        echo "Target Project Directory: $PROJECT_DIR"
-        
-        if [ -z "$PROJECT_DIR" ]; then
-          echo "Error: build.gradle not found anywhere in the repository!"
-          exit 1
-        fi
-        
+        echo "Project at: $PROJECT_DIR"
         cd "$PROJECT_DIR"
         
-        # التحقق من وجود gradlew أو إنشائه
         if [ ! -f "gradlew" ]; then
           gradle wrapper
         fi
         
         chmod +x gradlew
         
-        # تنفيذ البناء مع إظهار الأخطاء بالكامل
-        ./gradlew assembleDebug --no-daemon || {
-          echo "=== BUILD FAILED, SHOWING LOGS ==  ="
-          cat build/reports/problems/problems.html || true
+        # تنفيذ البناء وتخزين المخرجات في ملف لمعرفة سبب الفشل بالتحديد
+        ./gradlew assembleDebug --no-daemon > build_output.log 2>&1 || {
+          echo "=== BUILD FAILED. PRINTING LAST 50 LINES OF LOGS ==="
+          tail -n 50 build_output.log
           exit 1
         }
 
