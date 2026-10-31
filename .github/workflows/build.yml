@@ -18,23 +18,22 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Find and Build APK
+    - name: Build with Gradle Directly
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
       run: |
-        # البحث عن مكان وجود gradlew وتنفيده تلقائياً
-        if [ -f "CandleAssistant/gradlew" ]; then
-          cd CandleAssistant
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-        elif [ -f "gradlew" ]; then
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-        else
-          echo "Gradle wrapper not found, searching..."
-          find . -name "gradlew"
-          exit 1
+        # البحث عن أي ملف build.gradle لمعرفة مكان المشروع وبنائه
+        PROJECT_DIR=$(find . -name "build.gradle" -exec dirname {} \; | head -n 1)
+        echo "Found project at: $PROJECT_DIR"
+        cd "$PROJECT_DIR"
+        
+        # إذا لم يكن gradlew موجوداً، سنستخدم gradle العام أو ننشئه
+        if [ ! -f "gradlew" ]; then
+          gradle wrapper
         fi
+        
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
