@@ -31,7 +31,7 @@ jobs:
         fi
         
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --stacktrace
+        ./gradlew assembleDebug --no-daemon --info
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
