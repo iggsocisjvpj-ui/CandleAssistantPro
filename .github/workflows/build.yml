@@ -22,18 +22,16 @@ jobs:
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
       run: |
-        # البحث عن أي ملف build.gradle لمعرفة مكان المشروع وبنائه
         PROJECT_DIR=$(find . -name "build.gradle" -exec dirname {} \; | head -n 1)
         echo "Found project at: $PROJECT_DIR"
         cd "$PROJECT_DIR"
         
-        # إذا لم يكن gradlew موجوداً، سنستخدم gradle العام أو ننشئه
         if [ ! -f "gradlew" ]; then
           gradle wrapper
         fi
         
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug --no-daemon --stacktrace
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
