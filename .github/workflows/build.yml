@@ -14,25 +14,25 @@ jobs:
 
     - name: Set up JDK 17
       uses: actions/setup-java@v3
-      with :
-        distribution : 'temurin'
-        java-version : '17'
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
-    - الاسم.                                       CD شمعة مساعد                                        : إعداد الروبوت SDK
-  الاستخدامات. : Android-actions/setup-android@v2
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
 
- - الاسم.: منح إذن التنفيذ لـ GradLew.
-     تشغيل.    : |
-  CD شمعة مساعد  
- CHMOD +X Gradlew | صحيح 
+    - name: Grant execute permission for gradlew
+      run: |
+        cd CandleAssistant
+        chmod +x gradlew || true
 
-               اسمالاسم.             : بناء الخداع APK
-   تشغيل   : | : |
-  CD شمعة مساعد  
-  ./ التجميع التخرجالعمالعمولة  
+    - name: Build Debug APK
+      run: |
+        cd CandleAssistant
+        ./gradlew assembleDebug
 
-      الاسم     : تحميل APK : تحميل APK 
-            الاستخدامات              : الإجراءات / التحميل-القطعة الأثرية@v3  الإجراءات/الحمولة-القطعة الأثرية@v3actions/upload-artifact@v3
-         الاستخدامات         :       الإجراءات / التحميل-القطعة الأثرية@v3       : : 
-:: app-debug
-            الاسم             : App-Debug : CandleAssistant/app/build/outputs/apk/debug/app-debug.apk
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-debug
+        path: CandleAssistant/app/build/outputs/apk/debug/app-debug.apk
