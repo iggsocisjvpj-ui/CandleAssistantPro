@@ -18,16 +18,27 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build Debug APK
+    - name: Find and Build APK
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
       run: |
-        cd CandleAssistant
-        chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        # البحث عن مكان وجود gradlew وتنفيده تلقائياً
+        if [ -f "CandleAssistant/gradlew" ]; then
+          cd CandleAssistant
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+        elif [ -f "gradlew" ]; then
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+        else
+          echo "Gradle wrapper not found, searching..."
+          find . -name "gradlew"
+          exit 1
+        fi
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: CandleAssistant/app/build/outputs/apk/debug/app-debug.apk
+        path: '**/build/outputs/apk/debug/app-debug.apk'
+        if-no-files-found: error
