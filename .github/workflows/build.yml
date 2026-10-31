@@ -18,20 +18,38 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build with Gradle Directly
+    - name: Build APK with Error Capture
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
       run: |
-        PROJECT_DIR=$(find . -name "build.gradle" -exec dirname {} \; | head -n 1)
-        echo "Found project at: $PROJECT_DIR"
+        # طباعة مسارات المستودع للتأكد من مكان وجود المشروع
+        pwd
+        ls -la
+        
+        # البحث عن ملف build.gradle والدخول إلى مجلده
+        PROJECT_DIR=$(find . -name "build.gradle" -not -path "*/.*" -exec dirname {} \; | head -n 1)
+        echo "Target Project Directory: $PROJECT_DIR"
+        
+        if [ -z "$PROJECT_DIR" ]; then
+          echo "Error: build.gradle not found anywhere in the repository!"
+          exit 1
+        fi
+        
         cd "$PROJECT_DIR"
         
+        # التحقق من وجود gradlew أو إنشائه
         if [ ! -f "gradlew" ]; then
           gradle wrapper
         fi
         
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --info
+        
+        # تنفيذ البناء مع إظهار الأخطاء بالكامل
+        ./gradlew assembleDebug --no-daemon || {
+          echo "=== BUILD FAILED, SHOWING LOGS ==  ="
+          cat build/reports/problems/problems.html || true
+          exit 1
+        }
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
