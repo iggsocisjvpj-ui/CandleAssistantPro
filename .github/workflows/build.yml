@@ -18,9 +18,19 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build Debug APK
+    - name: Generate Wrapper and Build APK
       run: |
-        cd CandleAssistant
+        # البحث التلقائي عن مكان المشروع بغض النظر عن الأسماء
+        PROJECT_DIR=$(find . -name "build.gradle" -not -path "*/.*" -exec dirname {} \; | head -n 1)
+        echo "Found project at: $PROJECT_DIR"
+        cd "$PROJECT_DIR"
+        
+        # إذا كان ملف gradlew غير موجود، سيقوم النظام بإنشائه فوراً لمنع الخطأ
+        if [ ! -f "gradlew" ]; then
+          echo "gradlew is missing, generating it now..."
+          gradle wrapper
+        fi
+        
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
 
@@ -28,4 +38,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: CandleAssistant/app/build/outputs/apk/debug/app-debug.apk
+        path: '**/build/outputs/apk/debug/app-debug.apk'
+        if-no-files-found: error
